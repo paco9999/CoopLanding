@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  address       String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  totalReferrals Int      @default(0)
+  referredBy    String?
+  referrals     Referral[] @relation("ReferrerToReferral")
+  referredByUser Referral? @relation("ReferredToReferral")
+}
+
+model Referral {
+  id          String    @id @default(uuid())
+  referrerId  String
+  referredId  String    @unique
+  createdAt   DateTime  @default(now())
+  status      ReferralStatus @default(PENDING)
+  referrer    User      @relation("ReferrerToReferral", fields: [referrerId], references: [id])
+  referred    User      @relation("ReferredToReferral", fields: [referredId], references: [id])
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+} 
