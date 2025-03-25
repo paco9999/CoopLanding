@@ -16,6 +16,7 @@ interface LeaderboardEntry {
 
 export const ReferralSystem = () => {
   const { address } = useAccount();
+  const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<ReferralStats>({
     totalReferrals: 0,
     rank: 0,
@@ -24,12 +25,21 @@ export const ReferralSystem = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!address) return;
+    setMounted(true);
+  }, []);
 
+  useEffect(() => {
+    if (!mounted || !address) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
       try {
+        setIsLoading(true);
         // Fetch statistiche utente
         const statsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/${address}`);
         if (!statsResponse.ok) {
@@ -48,11 +58,13 @@ export const ReferralSystem = () => {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
         console.error('Errore:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [address]);
+  }, [mounted, address]);
 
   const handleCopyLink = async () => {
     try {
@@ -64,10 +76,30 @@ export const ReferralSystem = () => {
     }
   };
 
+  if (!mounted) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center text-white p-4">
+        Caricamento...
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="text-center text-red-500 p-4">
         {error}
+      </div>
+    );
+  }
+
+  if (!address) {
+    return (
+      <div className="text-center text-white p-4">
+        Connetti il tuo wallet per vedere le statistiche
       </div>
     );
   }

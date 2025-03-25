@@ -22,6 +22,25 @@ type RequestWithReferral = Request<ParamsDictionary, any, ReferralRequest, Parse
 const prisma = new PrismaClient();
 const app = express();
 
+// Configurazione CORS
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Permetti richieste senza origin (es. chiamate da Postman o curl)
+    if (!origin) return callback(null, true);
+    
+    // Permetti tutte le richieste da localhost su qualsiasi porta
+    if (origin.match(/^http:\/\/localhost(:\d+)?$/)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 // Middleware di sicurezza
 app.use(helmet());
 
@@ -34,13 +53,6 @@ app.use(limiter);
 
 // Compressione GZIP
 app.use(compression());
-
-// CORS con opzioni di sicurezza
-app.use(cors({
-  origin: process.env.NEXT_PUBLIC_SITE_URL,
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
 app.use(express.json({ limit: '10kb' })); // Limite dimensione JSON
 
@@ -85,7 +97,7 @@ app.get('/api/stats/:address',
         orderBy: { totalReferrals: 'desc' }
       });
       
-      const rank = allUsers.findIndex(u => u.id === user.id) + 1;
+      const rank = allUsers.findIndex((u: { id: any; }) => u.id === user.id) + 1;
 
       res.json({
         totalReferrals: user.totalReferrals,

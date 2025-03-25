@@ -1,13 +1,11 @@
 'use client';
-'use client';
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { useAccount } from 'wagmi';
+import { useConnect, useAccount } from 'wagmi';
 
 export const ConnectButton = () => {
-  const { open } = useWeb3Modal();
+  const { connect, connectors } = useConnect();
   const { isConnected } = useAccount();
   const router = useRouter();
 
@@ -19,7 +17,10 @@ export const ConnectButton = () => {
 
   const handleConnect = async () => {
     try {
-      await open();
+      const connector = connectors[0];
+      if (connector) {
+        await connect({ connector });
+      }
     } catch (error) {
       console.error('Errore durante la connessione:', error);
     }

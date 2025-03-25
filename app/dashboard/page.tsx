@@ -1,20 +1,32 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { ReferralSystem } from '../components/ReferralSystem';
 
 export default function Dashboard() {
   const { isConnected, address } = useAccount();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!isConnected) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isConnected) {
       router.push('/');
     }
-  }, [isConnected, router]);
+  }, [isConnected, router, mounted]);
+
+  if (!mounted) {
+    return null;
+  }
+
+  if (!isConnected) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-4">
